@@ -1,40 +1,43 @@
 import streamlit as st
 from transformers import pipeline
+from auth import login
 
-st.set_page_config(page_title="AI Tutor", layout="centered")
+st.set_page_config("AI Tutor")
 
-st.title("📘 AI Tutor with Automated Content Generator")
+if "login" not in st.session_state:
+    st.session_state["login"] = False
+
+if not st.session_state["login"]:
+    login()
+    st.stop()
+
+st.title("📘 AI Tutor – GenAI Based Learning System")
 
 @st.cache_resource
 def load_models():
-    summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
-    qa_pipeline = pipeline("question-answering")
-    generator = pipeline("text-generation", model="gpt2")
-    return summarizer, qa_pipeline, generator
+    return (
+        pipeline("summarization", model="facebook/bart-large-cnn"),
+        pipeline("question-answering"),
+        pipeline("text-generation", model="gpt2")
+    )
 
-summarizer, qa_pipeline, generator = load_models()
+summarizer, qa, generator = load_models()
 
-option = st.selectbox(
-    "Choose Function",
-    ["Generate Summary", "Question Answering", "Generate MCQs"]
-)
+option = st.selectbox("Choose Option",
+                      ["Summary Generator", "Question Answering", "MCQ Generator"])
 
-if option == "Generate Summary":
+if option == "Summary Generator":
     text = st.text_area("Enter Text")
-    if st.button("Generate Summary"):
-        summary = summarizer(text, max_length=150, min_length=50, do_sample=False)
-        st.success(summary[0]['summary_text'])
+    if st.button("Generate"):
+        st.success(summarizer(text, max_length=120)[0]['summary_text'])
 
 elif option == "Question Answering":
-    context = st.text_area("Enter Context")
-    question = st.text_input("Enter Question")
-    if st.button("Get Answer"):
-        answer = qa_pipeline(question=question, context=context)
-        st.success(answer['answer'])
+    context = st.text_area("Context")
+    question = st.text_input("Question")
+    if st.button("Answer"):
+        st.success(qa(question=question, context=context)['answer'])
 
-elif option == "Generate MCQs":
-    topic = st.text_input("Enter Topic")
+elif option == "MCQ Generator":
+    topic = st.text_input("Topic")
     if st.button("Generate MCQs"):
-        prompt = f"Generate 3 MCQs with options and answers on {topic}"
-        mcqs = generator(prompt, max_length=200)
-        st.success(mcqs[0]['generated_text'])
+        st.success(generator(f"Generate MCQs on {topic}", max_length=200)[0]['generated_text'])
