@@ -2,3 +2,5 @@ streamlit
 transformers
 torch
 sentencepiece
+pymongo
+mysql-connector-python
