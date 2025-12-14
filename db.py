@@ -1,9 +1,5 @@
-import mysql.connector
+import sqlite3
 
 def get_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="root",
-        database="aitutor"
-    )
+    conn = sqlite3.connect("users.db", check_same_thread=False)
+    return conn
